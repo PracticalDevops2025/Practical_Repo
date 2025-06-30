@@ -1,63 +1,50 @@
-name: Build and Deploy to Environments
+name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 env:
   IMAGE_NAME: my-app
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  build-and-push:
-    name: Build & Push Docker Image
+  build:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Registry
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build Docker Image
-        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
-
-      - name: Push Image
+      - name: Build Docker image
         run: |
-          docker tag $IMAGE_NAME:$IMAGE_TAG mydockerhub/$IMAGE_NAME:$IMAGE_TAG
-          docker push mydockerhub/$IMAGE_NAME:$IMAGE_TAG
+          echo "Building Docker image $IMAGE_NAME:$IMAGE_TAG"
+          # docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Push Docker image
+        run: |
+          echo "Pushing Docker image $IMAGE_NAME:$IMAGE_TAG"
+          # docker push <registry-url>/$IMAGE_NAME:$IMAGE_TAG
 
   deploy-dev:
     name: Deploy to Dev
-    needs: build-and-push
+    needs: build
     runs-on: ubuntu-latest
     environment: dev
     steps:
       - name: Deploy to Dev
         run: |
-          echo "Deploying $IMAGE_NAME:$IMAGE_TAG to Dev"
-          # Use kubectl/helm/aws cli/ssh etc to deploy
+          echo "Deploying image $IMAGE_NAME:$IMAGE_TAG to DEV environment"
+          # your deployment commands for dev go here
 
-  deploy-staging:
-    name: Deploy to Staging
-    needs: build-and-push
+  deploy-stage:
+    name: Deploy to Stage
+    needs: build
     runs-on: ubuntu-latest
-    environment: staging
+    environment: stage
     steps:
-      - name: Deploy to Staging
+      - name: Deploy to Stage
         run: |
-          echo "Deploying $IMAGE_NAME:$IMAGE_TAG to Staging"
-          # Deploy steps for staging
-
-  deploy-prod:
-    name: Deploy to Prod
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://your-prod-url.com
-    steps:
-      - name: Deploy to Prod
-        run: |
-          echo "Deploying $IMAGE_NAME:$IMAGE_TAG to Production"
-          # Deploy steps for production
+          echo "Deploying image $IMAGE_NAME:$IMAGE_TAG to STAGE environment"
+          # your deployment commands for stage go here
